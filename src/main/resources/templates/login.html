@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="/static/css/login.css" rel='stylesheet' type='text/css' />
+<script type="text/javascript" src="/static/scripts/plugins/jquery/2.1.1/jquery.js"></script>
+</head>
+<body>
+	<script type="text/javascript">
+		$(document).ready(function(c) {
+			$('.close').on('click', function(c) {
+				$('.login-form').fadeOut('slow', function(c) {
+					$('.login-form').remove();
+				});
+			});
+		});
+	</script>
+	<h1></h1>
+	<div class="login-form">
+		<div class="close"></div>
+		<div class="head-info">
+			<label class="lbl-1"> </label> 
+			<label class="lbl-2"> </label> 
+			<label class="lbl-3"> </label>
+		</div>
+		<div class="clear"></div>
+		<div class="avtar">
+			<img src="/static/images/login/avtar.png" />
+		</div>
+		<form action="/login" method="post">
+			<input name="username" type="text" class="text" value="" placeholder="请输入用户名">
+			<div class="key">
+				<input name="password" type="password" value="" placeholder="请输入密码">
+			</div>
+			
+			<div class="signin">
+				<input type="submit" value="Login">
+			</div>
+			
+		</form>
+	</div>
+</body>
+</html>

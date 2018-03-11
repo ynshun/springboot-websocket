@@ -1,0 +1,147 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>实时聊天系统</title>
+    <link rel="stylesheet" href="/static/css/main.css" type="text/css">
+</head>
+<body th:data-username="${session.currentUser.username}">
+	<div id="chat">
+		<div class="sidebar">
+			<div class="m-card">
+				<header><img class="avatar" width="40" height="40" alt="Coffce" th:src="${session.currentUser.icon}"><p class="name" th:text="${session.currentUser.nickname}"></p></header>
+				<footer><input class="search" placeholder="search user..."></footer>
+			</div>
+			<!--v-component-->
+			<div class="m-list">
+				<ul>
+					<li th:each=""><img class="avatar" width="30" height="30" alt="webpack" src="/static/images/3.jpg"><p class="name">webpack</p></li>
+					<li class="active"><img class="avatar" width="30" height="30" alt="示例介绍" src="/static/images/2.png"><p class="name">示例介绍</p></li>
+					<li><img class="avatar" width="30" height="30" alt="webpack" src="/static/images/3.jpg"><p class="name">webpack</p></li>
+				</ul>
+			</div>
+			<!--v-component-->
+		</div>
+		<div class="main">
+			<div class="m-message">
+				<ul id="messages"></ul>
+			</div>
+			<div class="m-text">
+				<textarea id="text" placeholder="按 Ctrl + Enter 发送"></textarea>
+			</div>
+		</div>
+	</div>
+</body>	
+
+<script type="text/javascript" src="/static/scripts/plugins/jquery/2.1.1/jquery.js"></script>
+<script type="text/javascript">
+	var username = $('body').data('username');
+	var websocket = null;
+	function initWebsocket() {
+		closeWebSocket();
+		
+		// 判断当前浏览器是否支持WebSocket
+		if ('WebSocket' in window) {
+			websocket = new WebSocket("ws://localhost:8887/");
+		} else {
+			alert('当前浏览器 Not support websocket')
+		}
+
+		// 连接发生错误的回调方法
+		websocket.onerror = function() {
+			pushMessage(null, null, '网络异常，请重新连接！', 0);
+		};
+
+		// 连接成功建立的回调方法
+		websocket.onopen = function() {
+			websocket.send('userlogin:' + username);
+			pushMessage(null, null, '登录成功！', 0);
+		};
+
+		// 接收到消息的回调方法
+		websocket.onmessage = function(event) {
+			var data = JSON.parse(event.data);
+			
+			var fromUser = data.from_user;
+			
+			var time = data.send_time;
+			var icon = fromUser.icon;
+			
+			var targetType = (username === fromUser.username) ? 2 : 1;
+			
+			pushMessage(time, icon, data.message_content, targetType);
+		};
+
+		// 连接关闭的回调方法
+		websocket.onclose = function() {
+			pushMessage(null, null, '离线成功！', 0);
+		};
+	}
+	
+
+	// 监听窗口关闭事件，当窗口关闭时，主动去关闭websocket连接，防止连接还没断开就关闭窗口，server端会抛异常。
+	window.onbeforeunload = function() {
+		closeWebSocket();
+	}
+
+	// 将消息显示在网页上
+	function pushMessage(time, icon, text, direction) {
+		var html = [];
+		
+		if (direction == 0) { // 系统消息
+			html.push('<li><p class="time"><span>' + text + '</span></p></li>');
+		
+		} else if (direction == 1) { // 好友消息
+			html.push('<li>');
+			html.push(	'<p class="time"><span>' + time + '</span></p>');
+			html.push(	'<div class="main">');
+			html.push(		'<img class="avatar" width="30" height="30" src="' + icon + '">');
+			html.push(		'<div class="text">' + text + '</div>');
+			html.push(	'</div>');
+			html.push('</li>');
+		} else if (direction == 2) { // 我的消息
+			html.push('<li>');
+			html.push(	'<p class="time"><span>' + time + '</span></p>');
+			html.push(	'<div class="main self">');
+			html.push(		'<img class="avatar" width="30" height="30" src="' + icon + '">');
+			html.push(		'<div class="text">' + text + '</div>');
+			html.push(	'</div>');
+			html.push('</li>');
+		}
+		
+		$('#messages').append(html.join(''));
+	}
+
+	// 关闭WebSocket连接
+	function closeWebSocket() {
+		if (websocket != null && webSocket.readyState != 3) {
+			websocket.close();
+		}
+		websocket = null;
+	}
+
+	// 发送消息
+	function send() {
+		var targetType = 0;
+		var toObject = 'all';
+		var message = $('#text').val();
+		$('#text').val('');
+		
+		var data = {
+			targetType: targetType,
+			toUser: 'all',
+			messageContent: message
+		};
+		websocket.send(JSON.stringify(data));
+	}
+
+	$(document).keyup(function(event) {
+		if (event.ctrlKey && event.keyCode === 13) {
+			send();
+		}
+	});
+	
+	initWebsocket();
+</script>
+
+</html>
